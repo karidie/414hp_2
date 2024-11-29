@@ -4,7 +4,6 @@ import argparse
 import logging
 
 def training(instances, labels):
-    
     pass
 
 
