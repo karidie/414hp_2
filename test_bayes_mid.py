@@ -5,8 +5,11 @@ import logging
 from math import sqrt, exp, pi
 
 def training(instances, labels):
-    summarize = summarize_by_class(instances, labels)
-    return summarize
+    separated = separate_by_class(instances, labels)
+    summaries = dict()
+    for class_value, rows in separated.items():
+        summaries[class_value] = summarize_dataset(rows)
+    return summaries
 
 def predict(instance, parameters):
     probabilities = calculate_class_probabilities(parameters, instance)
@@ -55,7 +58,6 @@ def report(predictions, answers):
     logging.info("precision: {}%".format(precision))
     logging.info("recall: {}%".format(recall))
 
-# Load a CSV file
 def load_csv(filename):
     instances = []
     labels = []
@@ -72,7 +74,6 @@ def str_column_to_float(dataset, column):
     for row in dataset:
         row[column] = float(row[column].strip())
 
-# Convert string column to integer
 def str_column_to_int(labels):
     unique = set(labels)
     lookup = dict()
@@ -82,18 +83,16 @@ def str_column_to_int(labels):
         labels[i] = lookup[labels[i]]
     return lookup
 
-
-# Calculate the mean of a list of numbers
+ 
 def mean(numbers):
     return sum(numbers) / float(len(numbers))
 
-# Calculate the standard deviation of a list of numbers
 def stdev(numbers):
     avg = mean(numbers)
     variance = sum([(x - avg) ** 2 for x in numbers]) / float(len(numbers) - 1)
     return sqrt(variance)
 
-# Split the dataset by class values, returns a dictionary
+
 def separate_by_class(dataset, labels):
     separated = dict()
     for i in range(len(dataset)):
@@ -104,12 +103,10 @@ def separate_by_class(dataset, labels):
         separated[class_value].append(vector)
     return separated
 
-# Calculate the mean, stdev and count for each column in a dataset
 def summarize_dataset(dataset):
     summaries = [(mean(column), stdev(column), len(column)) for column in zip(*dataset)]
     return summaries
 
-# Split dataset by class then calculate statistics for each row
 def summarize_by_class(dataset, labels):
     separated = separate_by_class(dataset, labels)
     summaries = dict()
@@ -117,12 +114,10 @@ def summarize_by_class(dataset, labels):
         summaries[class_value] = summarize_dataset(rows)
     return summaries
 
-# Calculate the Gaussian probability distribution function for x
 def calculate_probability(x, mean, stdev):
     exponent = exp(-((x - mean) ** 2 / (2 * stdev ** 2)))
     return (1 / (sqrt(2 * pi) * stdev)) * exponent
 
-# Calculate the probabilities of predicting each class for a given row
 def calculate_class_probabilities(summaries, row):
     total_rows = sum([summaries[label][0][2] for label in summaries])
     probabilities = dict()
