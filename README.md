@@ -21,7 +21,7 @@ Our team name is "414HP." This number is derived from the combined horsepower of
 plus an additional 1 horsepower contributed by man power of all team members.
 
 ### Contribution 
-* **유선오** : 
+* **유선오** : Automation
 * **정시훈** : 
 * **성영주** : 
 * **정수빈** : 
