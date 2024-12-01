@@ -4,9 +4,14 @@ import argparse
 import logging
 from math import sqrt, exp, pi
 import datetime
+import time
+
+#! recall is more important
 
 def stripdt(src):
-    return datetime.datetime.splittime(src, '%y-%m-%d')
+    dt = datetime.datetime.strptime(src, '%Y-%m-%d')
+    # return -1 if summer and 1 if winter (winter: Oct - Mar, summer: Apr - Sep)
+    return str(dt.month)
 
 def training(instances, labels):
     summarize = summarize_by_class(instances, labels)
@@ -42,6 +47,7 @@ def report(predictions, answers):
                 tp += 1
             else:
                 fp += 1
+    print(f"tp: {tp}, fp: {fp}")
     precision = round(tp / (tp + fp), 2) * 100
 
     # recall
@@ -61,6 +67,8 @@ def report(predictions, answers):
     logging.info("precision: {}%".format(precision))
     logging.info("recall: {}%".format(recall))
     logging.info("f1: {}".format(f1))
+    
+    return accuracy, precision, recall, f1
 
 # Load a CSV file
 def load_csv(filename):
@@ -72,6 +80,10 @@ def load_csv(filename):
             tmp = line.strip().split(',')
             instances.append(tmp[:-1])
             labels.append(tmp[-1])
+    # apply stripdt to the first column of instances
+    for inst in instances:
+        inst[0] = stripdt(inst[0])  
+    logging.debug("instances: {}".format(instances))          
     return instances, labels
 
 # Convert string column to float
@@ -140,26 +152,29 @@ def calculate_class_probabilities(summaries, row):
             probabilities[class_value] *= calculate_probability(row[i], mean, stdev)
     return probabilities
 
-
-def run(train_file, test_file):
+def preprocess(train_file, test_file):
     # training phase
-    instances, labels = load_csv(train_file)
-    for i in range(len(instances[0])):
-        str_column_to_float(instances, i)
-    str_column_to_int(labels)
-
-    logging.debug("instances: {}".format(instances))
-    logging.debug("labels: {}".format(labels))
-    parameters = training(instances, labels)
+    train_instances, train_labels = load_csv(train_file)
+    for i in range(len(train_instances[0])):
+        str_column_to_float(train_instances, i)
+    str_column_to_int(train_labels)
 
     # testing phase
-    instances, labels = load_csv(test_file)
-    for i in range(len(instances[0])):
-        str_column_to_float(instances, i)
-    str_column_to_int(labels)
+    test_instances, test_labels = load_csv(test_file)
+    for i in range(len(test_instances[0])):
+        str_column_to_float(test_instances, i)
+    str_column_to_int(test_labels)
+    
+    return train_instances, train_labels, test_instances, test_labels
 
+
+def run(train_instances: list, train_labels: list, test_instances: list, test_labels: list):
+    logging.debug("instances: {}".format(train_instances))
+    logging.debug("labels: {}".format(train_labels))
+    parameters = training(train_instances, train_labels)
+    
     predictions = []
-    for instance in instances:
+    for instance in test_instances:
         result = predict(instance, parameters)
 
         if result not in [0, 1]:
@@ -169,12 +184,13 @@ def run(train_file, test_file):
         predictions.append(result)
     
     # report
-    report(predictions, labels)
+    acc, prc, rec, f1 = report(predictions, test_labels)
+    return acc, prc, rec, f1
 
 def command_line_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--training", required=False, metavar="<file path to the training dataset>", help="File path of the training dataset", default="./dataset/train/training1.csv")
-    parser.add_argument("-u", "--testing", required=False, metavar="<file path to the testing dataset>", help="File path of the testing dataset", default="./dataset/test/testing1.csv")
+    parser.add_argument("-t", "--training", required=False, metavar="<file path to the training dataset>", help="File path of the training dataset", default="./dataset/train/training.csv")
+    parser.add_argument("-u", "--testing", required=False, metavar="<file path to the testing dataset>", help="File path of the testing dataset", default="./dataset/test/testing.csv")
     parser.add_argument("-l", "--log", help="Log level (DEBUG/INFO/WARNING/ERROR/CRITICAL)", type=str, default="INFO")
 
     args = parser.parse_args()
@@ -192,7 +208,11 @@ def main():
         logging.error("The testing dataset does not exist: {}".format(args.testing))
         sys.exit(1)
 
-    run(args.training, args.testing)
+    timer_start = time.time()
+    data = preprocess(args.training, args.testing)
+    run(*data)    
+    timer_end = time.time()
+    logging.info("Time elapsed: {}s".format(timer_end - timer_start))
 
 if __name__ == "__main__":
     main()
