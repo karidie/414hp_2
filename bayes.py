@@ -54,10 +54,13 @@ def report(predictions, answers):
             else:
                 fn += 1
     recall = round(tp / (tp + fn), 2) * 100
+    
+    f1 = 2 * (precision * recall) / (precision + recall)
 
     logging.info("accuracy: {}%".format(accuracy))
     logging.info("precision: {}%".format(precision))
     logging.info("recall: {}%".format(recall))
+    logging.info("f1: {}".format(f1))
 
 # Load a CSV file
 def load_csv(filename):
