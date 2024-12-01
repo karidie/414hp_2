@@ -3,6 +3,10 @@ import sys
 import argparse
 import logging
 from math import sqrt, exp, pi
+import datetime
+
+def stripdt(src):
+    return datetime.datetime.splittime(src, '%y-%m-%d')
 
 def training(instances, labels):
     summarize = summarize_by_class(instances, labels)
