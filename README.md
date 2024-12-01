@@ -22,7 +22,7 @@ plus an additional 1 horsepower contributed by man power of all team members.
 
 ### Contribution 
 * **유선오** : Automation
-* **정시훈** : 
+* **정시훈** : Feature Selection
 * **성영주** : 
 * **정수빈** : 
 * **한승우** : 
