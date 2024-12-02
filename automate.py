@@ -72,6 +72,13 @@ try:
 except Exception as e:
     os.system('python automate.py & ')
     exit()
+
+unique_results = {}
+for result in results:
+    i = result[0]
+    if i not in unique_results or result[3] > unique_results[i][3]:
+        unique_results[i] = result
+results = list(unique_results.values())
     
 results.sort(key=lambda x: x[3], reverse=True)
 print(f"\n\nTop 3 results: {results[:3]}")
